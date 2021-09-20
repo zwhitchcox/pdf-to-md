@@ -7,6 +7,8 @@ export const test = process.env.NODE_ENV === 'test' ? async (name: string, fn: A
     console.log(chalk.green('✓'), name)
   } catch (error) {
     console.error(chalk.red('☓'), name)
+    console.error(chalk.red(error))
+    console.error(error.stack)
   }
 } : (() => {})
 
