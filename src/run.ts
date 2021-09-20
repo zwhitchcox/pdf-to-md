@@ -3,35 +3,67 @@ import { expect, test } from './test.js';
 import { fileURLToPath } from 'url';
 import * as path from 'path';
 import { PDFDocumentProxy, PDFPageProxy, TextContent } from 'pdfjs-dist/types/display/api';
-import { Readable, ReadableOptions } from 'stream';
+import { pipeline, Readable, ReadableOptions, Transform } from 'stream';
+import { PDFPageViewport } from 'pdfjs-dist';
 
 // number of pages to process at a time
 const BUF_LEN = 16;
 
-function getPageItems(doc: PDFDocumentProxy, i: number) {
-  const pageP = doc.getPage(i+1)
-  return [pageP, pageP.then(page => page.getTextContent())]
+
+const getContent = ({items, page}) => {
+
 }
 
-async function*genPageItems(doc: PDFDocumentProxy) {
+function getPageAndContent(doc: PDFDocumentProxy, i: number) {
+  const pageP = doc.getPage(i+1);
+  pageP.then(page => {
+    const scale = 1.0;
+    return Promise.all<TextContent,PDFPageViewport>([
+      page.getTextContent(),
+      page.getViewport({scale}),
+    ]);
+  }).then(([content, viewport]) => {
+    const normalized = []
+  });
+
+  const normalizedItemsP = textContentP.then(({items}) => {
+    for (const item of items) {
+      const normalizedItem = {
+          x: Math.round(item.transform[4]),
+          y: Math.round(item.transform[5]),
+          width: Math.round(item.width),
+          height: Math.round(dividedHeight <= 1 ? item.height : dividedHeight),
+          text: item.str,
+          font: item.fontName,
+          style: textContent.styles[item.fontName],
+      });
+
+    }
+  })
+  return [pageP, pageP.then(page => page.getTextContent()), normalizedItemsP]
+}
+
+function*genPagesAndContent(doc: PDFDocumentProxy) {
   const buf = []
-  for (let i = 0; i < Math.max(BUF_LEN, doc.numPages); i++) {
-    buf.push(getPageItems(doc, i))
+  for (let i = 0; i < Math.min(BUF_LEN, doc.numPages); i++) {
+    buf.push(getPageAndContent(doc, i))
   }
   for (let i = 0; i < doc.numPages; i++) {
-    yield buf[i]
+    yield Promise.all(buf[i])
+      .then(([page, textContent, items]) => ({page, textContent, items}))
     const cursor = i + BUF_LEN;
     if (cursor < doc.numPages) {
-      buf.push(getPageItems(doc, cursor))
+      buf.push(getPageAndContent(doc, cursor))
     }
   }
 }
 
-async function loadDocument(file: string) {
-  pdfjs.GlobalWorkerOptions.workerSrc = 'pdfjs-dist/legacy/build/pdf.worker.js';
-  const loadingTask = pdfjs.getDocument(file);
-  return await loadingTask.promise;
+class Normalize extends Transform {
+  _transform({page, textContent}, encoding, callback) {
+    for (const item of textContent.items) {
 
+    }
+  }
 }
 
 async function getGlobalStats(textContents: TextContent[]) {
@@ -43,24 +75,27 @@ async function getGlobalStats(textContents: TextContent[]) {
 }
 
 
+async function loadDocument(file: string) {
+  pdfjs.GlobalWorkerOptions.workerSrc = 'pdfjs-dist/legacy/build/pdf.worker.js';
+  const loadingTask = pdfjs.getDocument(file);
+  return await loadingTask.promise;
+
+}
+
+
 
 async function pdfToMd(file: string) {
 }
 
-test(async () => {
+test('main', async () => {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
   const TEST_FILE = 'file://' + path.join(__dirname, '..','/pages/test-page.pdf')
-  const doc = await loadDocument(TEST_FILE)
-  const {pages, textContents} = await parsePdf(TEST_FILE)
-  const globalStats = getGlobalStats(textContents)
-})
-  const pageP: Promise<PDFPageProxy>[] = []
-  const textContentsP: Promise<TextContent>[] = []
-  for (let i = 0; i < loaded.numPages; i++) {
-    const prom = pageP[i] = loaded.getPage(i+1)
-    prom.then(page => textContentsP[i] = page.getTextContent())
+  const doc = await loadDocument(TEST_FILE);
+  const highWaterMark = BUF_LEN;
+  const objectMode = true;
+  for await (const {page, textContent} of genPagesAndContent(doc)) {
+    console.log(textContent)
   }
-  const pages = await Promise.all(pageP)
-  const textContents = await Promise.all(textContentsP)
-  return {pages, textContents}
+  // const pageStream = Readable.from(genPagesAndContent(doc), {objectMode, highWaterMark});
+})
