@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/node": "^16.9.4",
     "@types/pdfjs-dist": "^2.7.4",
     "expect": "^27.2.0",
     "ts-node": "^10.2.1"
