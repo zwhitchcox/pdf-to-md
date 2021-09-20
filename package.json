@@ -1,0 +1,22 @@
+{
+  "name": "pdf-to-md",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node --loader ts-node/esm ./src/run.ts",
+    "test": "NODE_ENV=test node --loader ts-node/esm"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/pdfjs-dist": "^2.7.4",
+    "expect": "^27.2.0",
+    "ts-node": "^10.2.1"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^2.9.359"
+  }
+}
