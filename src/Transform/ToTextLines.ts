@@ -3,7 +3,7 @@ import { DEFAULT_BUF_LEN } from "./constants.js";
 import { TextContent } from "./interfaces.js";
 
 
-export class ToPageLines extends Transform {
+export class ToTextLines extends Transform {
   constructor(opts: TransformOptions = {}) {
     super({
       ...opts,

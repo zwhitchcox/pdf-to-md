@@ -6,3 +6,12 @@ export type TextContent = {
   styles: {[x: string]: TextStyle};
   items: TextItem[];
 }
+
+export type TextLines = {
+  styles: {[x: string]: TextStyle};
+  items: TextLine[];
+}
+
+export type TextLine = TextItem[];
+
+export type OnProgressFn = (num: number) => any
