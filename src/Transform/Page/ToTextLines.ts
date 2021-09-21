@@ -1,17 +1,9 @@
-import { Transform, TransformOptions } from "stream";
-import { DEFAULT_BUF_LEN } from "./constants.js";
-import { TextContent } from "./interfaces.js";
+import { TextContent } from "../../interfaces.js";
+import { PageTransform } from "./Page.js";
 
 
-export class ToTextLines extends Transform {
-  constructor(opts: TransformOptions = {}) {
-    super({
-      ...opts,
-      objectMode: true,
-      highWaterMark: opts.highWaterMark || DEFAULT_BUF_LEN,
-    })
-  }
-
+// merge all text items to same line
+export class ToTextLines extends PageTransform {
   _transform(text: TextContent, _encoding, cb) {
     const items = text.items;
     let cursor = 0;

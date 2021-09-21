@@ -1,18 +1,27 @@
-// Strip the top and bottom margins from the page.
-//
-// We create a hash of each line of the page, excluding numbers (e.g., page numbers) and spaces,
-// from top to bottom and bottom to top.
-//
-// If the next page has matching hash lines at the top or bottom, we remove them, outward-in,
-// until we see a non-matching line or reach the end (meaning all lines matched).
-//
-// Skip blank pages
+import { TextLines, TextItem } from "../../interfaces";
+import { PageTransform } from "./Page";
 
-import { Transform, TransformOptions } from "stream";
-import { DEFAULT_BUF_LEN } from "../constants";
-import { TextLines } from "../interfaces";
-import { hashLine } from "../util";
+const MIN_DIGIT_CHAR_CODE = "0".charCodeAt(0);
+const MAX_DIGIT_CHAR_CODE = "9".charCodeAt(0);
+const isDigit = char => char >= MIN_DIGIT_CHAR_CODE && char <= MAX_DIGIT_CHAR_CODE;
 
+// create a hash of each line of the page, excluding numbers (e.g., page numbers) and spaces
+export function hashLine(line: TextItem[]) {
+  let string = ''
+  for (const item of line) {
+    string += item.str;
+  }
+  var hash = 0;
+  if (string.trim().length === 0) return hash;
+  for (var i = 0; i < string.length; i++) {
+    const charCode = string.charCodeAt(i);
+    if (!isDigit(charCode) && charCode != 32 && charCode != 160) {
+      hash = ((hash << 5) - hash) + charCode;
+      hash |= 0; // Convert to 32bit integer
+    }
+  }
+  return hash;
+}
 
 const reverse = (arr: any[]) => arr.slice().reverse();
 
@@ -31,15 +40,9 @@ const strip = (text: TextLines, start: number, end: number) => ({
 
 const hashPage = (text: TextLines) => text.items.map(hashLine);
 
-export class StripMargins extends Transform {
-  constructor(opts: Omit<TransformOptions, 'objectMode'> = {}) {
-    super({
-      ...opts,
-      highWaterMark: opts.highWaterMark ?? DEFAULT_BUF_LEN,
-      objectMode: true,
-    });
-  }
-
+// Strip margins from the page by comparing a hash of previous and current
+// page lines, from top-to-bottom and bottom-to-top
+export class StripMargins extends PageTransform {
   prevHash: {
     topHash: number[]; // hash of lines top-down
     botHash: number[]; // hash of lines bot-up
