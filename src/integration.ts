@@ -2,9 +2,10 @@ import path from "path/posix";
 import { pipeline } from "stream";
 import { fileURLToPath } from "url";
 import { test } from "../test/test.js";
+import { HashLines } from "./to-line-hashes.js";
 import { loadDocument } from "./load.js";
 import { genText, getTextStream } from "./text-stream.js";
-import { ToLines } from "./to-lines.js";
+import { ToLines } from "./ToPageLines.js";
 
 test('integration', async () => {
   const __filename = fileURLToPath(import.meta.url);
@@ -16,7 +17,7 @@ test('integration', async () => {
   // }
   const textStream = getTextStream(doc);
   // textStream.on('data', console.log)
-  pipeline(getTextStream(doc), new ToLines, (err) => {
+  pipeline(getTextStream(doc), new ToLines, new HashLines, (err) => {
     if (err) {
       console.error('pipeline error:', err)
     } else {

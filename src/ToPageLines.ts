@@ -1,10 +1,9 @@
-import { TextContent, TextItem } from "pdfjs-dist/types/display/api";
 import { Transform, TransformOptions } from "stream";
 import { DEFAULT_BUF_LEN } from "./constants.js";
+import { TextContent } from "./interfaces.js";
 
-type TI = TextItem & {hasEOL: boolean};
 
-export class ToLines extends Transform {
+export class ToPageLines extends Transform {
   constructor(opts: TransformOptions = {}) {
     super({
       ...opts,
@@ -13,19 +12,22 @@ export class ToLines extends Transform {
     })
   }
 
-  _transform(text: TextContent, encoding, cb) {
-    const items = text.items as TI[];
-    for (const item of items) {
-      console.log(item)
-    }
+  _transform(text: TextContent, _encoding, cb) {
+    const items = text.items;
     let cursor = 0;
+    const page = []
     while (cursor < items.length) {
       const line = [];
       let item;
       while ((item = items[cursor++]) && !item.hasEOL) {
         line.push(item)
       }
-      this.push(line)
+      if (item) {
+        line.push(item)
+      }
+      page.push(line)
     }
+    this.push(page)
+    cb()
   }
 }
