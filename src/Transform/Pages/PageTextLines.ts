@@ -3,7 +3,7 @@ import { PageTransform } from "./Page.js";
 
 
 // merge all text items to same line
-export class ToTextLines extends PageTransform {
+export class PageTextLines extends PageTransform {
   _transform(text: TextContent, _encoding, cb) {
     const items = text.items;
     let cursor = 0;

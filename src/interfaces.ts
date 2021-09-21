@@ -15,3 +15,8 @@ export type TextLines = {
 export type TextLine = TextItem[];
 
 export type OnProgressFn = (num: number) => any
+
+export type Line = {
+  styles: {[x: string]: TextStyle};
+  line: TextLine;
+}

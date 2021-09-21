@@ -1,12 +1,8 @@
 import pdfjs from 'pdfjs-dist/legacy/build/pdf.js';
-import { test } from '../test/test.js';
-import { fileURLToPath } from 'url';
-import * as path from 'path';
-
 import { PDFDocumentProxy } from "pdfjs-dist/types/display/api";
 import { Readable } from "stream";
-import { DEFAULT_BUF_LEN } from "./constants.js";
 import { OnProgressFn } from './interfaces.js';
+import { DEFAULT_BUF_LEN } from './Transform/ObjectMode.js';
 
 export function*genText(doc: PDFDocumentProxy, onProgress?) {
   const buf = []

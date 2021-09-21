@@ -1,5 +1,5 @@
 import { TransformOptions } from "stream";
-import { DEFAULT_BUF_LEN, TransformObjectMode } from "../ObjectMode";
+import { DEFAULT_BUF_LEN, TransformObjectMode } from "../ObjectMode.js";
 
 // use default buffer length for pages
 export class PageTransform extends TransformObjectMode {

@@ -1,5 +1,5 @@
-import { TextLines, TextItem } from "../../interfaces";
-import { PageTransform } from "./Page";
+import { TextLines, TextItem } from "../../interfaces.js";
+import { PageTransform } from "./Page.js";
 
 const MIN_DIGIT_CHAR_CODE = "0".charCodeAt(0);
 const MAX_DIGIT_CHAR_CODE = "9".charCodeAt(0);
