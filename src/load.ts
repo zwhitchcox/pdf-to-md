@@ -3,6 +3,13 @@ import { PDFDocumentProxy } from "pdfjs-dist/types/display/api";
 import { Readable } from "stream";
 import { OnProgressFn } from './interfaces.js';
 import { DEFAULT_BUF_LEN } from './Transform/ObjectMode.js';
+import { TextItem as TI, TextStyle } from "pdfjs-dist/types/display/api";
+
+export type TextItem = TI & {hasEOL: boolean};
+export type TextContent = {
+  styles: {[x: string]: TextStyle};
+  items: TextItem[];
+}
 
 export function*genText(doc: PDFDocumentProxy, onProgress?) {
   const buf = []

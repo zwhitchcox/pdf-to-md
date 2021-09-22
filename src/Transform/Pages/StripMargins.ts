@@ -1,5 +1,18 @@
-import { TextLines, TextItem } from "../../interfaces.js";
-import { PageTransform } from "./Page.js";
+import { TextItem } from "../../load.js";
+import { PageTransform } from "./Base.js";
+import { TextLines } from "./PageTextLines.js";
+
+export type PageInfo = {
+  text: TextLines;
+  hash: {
+    top: number[]; // hash of lines top-down
+    bot: number[]; // hash of lines bot-up
+  };
+  margin: {
+    top: number; // # of lines removed from top of previous text
+    bot: number; // # of lines removed from bot of previous text
+  }
+};
 
 const MIN_DIGIT_CHAR_CODE = "0".charCodeAt(0);
 const MAX_DIGIT_CHAR_CODE = "9".charCodeAt(0);
@@ -23,9 +36,21 @@ export function hashLine(line: TextItem[]) {
   return hash;
 }
 
-const reverse = (arr: any[]) => arr.slice().reverse();
+const hashPage = (text: TextLines): number[] => text.lines.map(hashLine);
+
+
+const strip = (page: PageInfo): TextLines => {
+  const { text, margin } = page;
+  return {
+    ...text,
+    lines: text.lines.slice(margin.top, text.lines.length - margin.bot),
+  }
+}
 
 const detectMargin = (h1, h2) => {
+  if (!(h1 && h2)) {
+    return 0;
+  }
   let i = 0;
   while (h1[i] === h2[i]) {
     i++
@@ -33,76 +58,78 @@ const detectMargin = (h1, h2) => {
   return i;
 }
 
-const strip = (text: TextLines, start: number, end: number) => ({
-  ...text,
-  lines: text.lines.slice(start, text.lines.length - end),
-})
+const reverse = (arr: any[]) => arr.slice().reverse();
+// We check margins from both directions.
+//
+// Overlapping top/bottom margins will just mean the
+// page is blank.
+const getHash = (text: TextLines) => {
+  const top = hashPage(text);
+  const bot = reverse(top);
+  return {top, bot};
+}
 
-const hashPage = (text: TextLines) => text.lines.map(hashLine);
+const maxMargin = (m1: PageInfo["margin"], m2: PageInfo["margin"]) => {
+  return {
+    // We compare top and bottom margins separately, because
+    // the top margin may contain the book title for instance
+    top: Math.max(m1?.top || 0, m2?.top || 0),
+    bot: Math.max(m1?.top || 0, m2?.top || 0),
+  }
+}
 
-// Strip margins from the page by comparing a hash of previous and current
-// page lines, from top-to-bottom and bottom-to-top
+const getMargin = (h1: PageInfo["hash"], h2: PageInfo["hash"]) => {
+  return {
+    top: detectMargin(h1?.top, h2?.top),
+    bot: detectMargin(h1?.bot, h2?.bot),
+  }
+}
+
+const getInfo = (prev: PageInfo, text: TextLines) => {
+  const hash = getHash(text);
+  const margin = getMargin(hash, prev?.hash)
+  return {
+    text,
+    hash,
+    margin,
+  }
+}
+
 export class StripMargins extends PageTransform {
-  prevHash: {
-    topHash: number[]; // hash of lines top-down
-    botHash: number[]; // hash of lines bot-up
-  };
-  prevText: TextLines;
-  prevMarg: {
-    top: number; // # of lines removed from top of previous text
-    bot: number; // # of lines removed from bot of previous text
-  };
+  prev: PageInfo;
 
   _transform(text: TextLines, _encoding, cb) {
-    const {prevHash, prevText} = this;
-    this.prevText = text
+    const {prev} = this;
 
-    const topHash = hashPage(text);
-    const botHash = reverse(topHash);
-
-    this.prevHash = {
-      topHash,
-      botHash,
-    }
-
-    if (!prevHash) {
-      // we are on first page, nothing to compare against
-      this.prevMarg = {
-        top: 0,
-        bot: 0,
-      }
+    // Gather page info, comparing hash of previous page's lines,
+    // excluding numbers and spaces, to hash of current page's lines,
+    // from top-to-bottom and bottom-to-top.
+    //
+    // Matching hash lines constitute a margin, because the same line of
+    // the previous page contained the same content.
+    //
+    // We exclude numbers because page numbers change every page.
+    const cur = getInfo(prev, text);
+    this.prev = cur;
+    if (!prev) { // on first page, nothing to push
       return cb();
     }
 
-    // number of matching lines in previous/cur page
-    const top = detectMargin(prevHash.topHash, topHash);
-    const bot = detectMargin(prevHash.botHash, botHash);
-
-    this.prevMarg = {
-      top,
-      bot,
+    // Detected margins are saved from the previous page's previous page.
+    // Getting the maximum of the previous and current page's margins
+    // means we're getting the maximum of both surrounding pages.
+    const {top, bot} = maxMargin(cur.margin, prev?.margin);
+    if (top + bot < prev.text.lines.length) {
+      // output page if not blank
+      this.push(strip(prev))
     }
 
-    const len = topHash.length
-    if (top >= len - 1 || bot >= len - 1) { // ignore blank pages
-      return cb();
-    }
-
-    this.push(strip(prevText, top, bot))
     cb();
   }
 
   _flush(cb) {
-    try {
-      if (this.prevText) {
-        // previous page compared to current page, so
-        // top and bottom margins will be the same
-        const {top, bot} = this.prevMarg;
-        this.push(strip(this.prevText, top, bot))
-      }
-    } catch (err) {
-      console.error('error final', err)
-    }
+    // there is no next page to compare to, so margins are set
+    this.push(strip(this.prev))
     cb()
   }
 }

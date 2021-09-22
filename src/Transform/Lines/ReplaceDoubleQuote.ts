@@ -1,5 +1,5 @@
-import { Line, TextLines } from "../../interfaces.js";
 import { LineTransform } from "./Base.js";
+import { Line } from "./Lines.js";
 
 // convert "``_''" to '"_"'
 export class ReplaceDoubleQuotes extends LineTransform {

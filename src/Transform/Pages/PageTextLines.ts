@@ -1,6 +1,13 @@
-import { TextContent } from "../../interfaces.js";
-import { PageTransform } from "./Page.js";
+import { TextStyle } from 'pdfjs-dist/types/display/api';
+import { TextContent, TextItem } from '../../load.js'
+import { PageTransform } from "./Base.js";
 
+export type TextLines = {
+  styles: {[x: string]: TextStyle};
+  lines: TextLine[];
+}
+
+export type TextLine = TextItem[];
 
 // merge all text items to same line
 export class PageTextLines extends PageTransform {

@@ -1,5 +1,6 @@
-import { Line, TextLine, TextLines } from "./interfaces.js";
 import { LineTransform } from "./Transform/Lines/Base.js";
+import { Line } from "./Transform/Lines/Lines.js";
+import { TextLine } from "./Transform/Pages/PageTextLines.js";
 
 
 const joinLine = (line: TextLine) => line.map(item => item.str).join('')

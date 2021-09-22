@@ -1,5 +1,5 @@
-import { TextContent, TextLines } from "../../interfaces.js";
-import { PageTransform } from "./Page.js";
+import { PageTransform } from "./Base.js";
+import { TextLines } from "./PageTextLines.js";
 
 // continuous output of text lines including styles
 export class ContinuousTextLines extends PageTransform {
