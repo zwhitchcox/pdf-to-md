@@ -35,10 +35,10 @@ const detectMargin = (h1, h2) => {
 
 const strip = (text: TextLines, start: number, end: number) => ({
   ...text,
-  items: text.items.slice(start, text.items.length - end),
+  lines: text.lines.slice(start, text.lines.length - end),
 })
 
-const hashPage = (text: TextLines) => text.items.map(hashLine);
+const hashPage = (text: TextLines) => text.lines.map(hashLine);
 
 // Strip margins from the page by comparing a hash of previous and current
 // page lines, from top-to-bottom and bottom-to-top
@@ -83,19 +83,25 @@ export class StripMargins extends PageTransform {
       bot,
     }
 
-    if (top < bot) { // ignore blank pages
-      this.push(strip(prevText, top, bot))
+    const len = topHash.length
+    if (top >= len - 1 || bot >= len - 1) { // ignore blank pages
+      return cb();
     }
 
+    this.push(strip(prevText, top, bot))
     cb();
   }
 
-  _final(cb) {
-    if (this.prevText) {
-      // previous page compared to current page, so
-      // top and bottom margins will be the same
-      const {top, bot} = this.prevMarg;
-      this.push(strip(this.prevText, top, bot))
+  _flush(cb) {
+    try {
+      if (this.prevText) {
+        // previous page compared to current page, so
+        // top and bottom margins will be the same
+        const {top, bot} = this.prevMarg;
+        this.push(strip(this.prevText, top, bot))
+      }
+    } catch (err) {
+      console.error('error final', err)
     }
     cb()
   }

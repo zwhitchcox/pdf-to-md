@@ -7,7 +7,7 @@ export class PageTextLines extends PageTransform {
   _transform(text: TextContent, _encoding, cb) {
     const items = text.items;
     let cursor = 0;
-    const page = []
+    const lines = []
     while (cursor < items.length) {
       const line = [];
       let item;
@@ -17,9 +17,12 @@ export class PageTextLines extends PageTransform {
       if (item) {
         line.push(item)
       }
-      page.push(line)
+      lines.push(line)
     }
-    this.push(page)
+    this.push({
+      styles: text.styles,
+      lines,
+    })
     cb()
   }
 }

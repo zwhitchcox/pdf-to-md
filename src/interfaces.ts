@@ -9,7 +9,7 @@ export type TextContent = {
 
 export type TextLines = {
   styles: {[x: string]: TextStyle};
-  items: TextLine[];
+  lines: TextLine[];
 }
 
 export type TextLine = TextItem[];

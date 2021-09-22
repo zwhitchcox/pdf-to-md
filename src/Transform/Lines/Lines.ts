@@ -1,13 +1,12 @@
-import { TransformOptions } from "stream";
-import { DEFAULT_BUF_LEN, TransformObjectMode } from "../ObjectMode.js";
+import { TextLines } from "../../interfaces.js";
+import { LineTransform } from "./Base.js";
 
-// use default buffer length for lines
-export class LineTransform extends TransformObjectMode {
-  constructor(opts: Omit<TransformOptions, 'objectMode'> = {}) {
-    super({
-      ...opts,
-      highWaterMark: opts.highWaterMark ?? DEFAULT_BUF_LEN * 50, // Assume ~50 lines per page
-    });
+export class Lines extends LineTransform {
+  _transform(text: TextLines, _encoding, cb) {
+    const { lines, styles } = text
+    for (const line of lines) {
+      this.push({styles, line})
+    }
+    cb()
   }
 }
-
