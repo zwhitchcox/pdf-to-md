@@ -1,9 +1,8 @@
-import { TextItem } from "../../load.js";
 import { PageTransform } from "./Base.js";
-import { TextLines } from "./PageTextLines.js";
+import { Line } from "./Preprocessing.js";
 
 export type PageInfo = {
-  text: TextLines;
+  text: Line[];
   hash: {
     top: number[]; // hash of lines top-down
     bot: number[]; // hash of lines bot-up
@@ -19,14 +18,14 @@ const MAX_DIGIT_CHAR_CODE = "9".charCodeAt(0);
 const isDigit = char => char >= MIN_DIGIT_CHAR_CODE && char <= MAX_DIGIT_CHAR_CODE;
 
 // create a hash of each line of the page, excluding numbers (e.g., page numbers) and spaces
-export function hashLine(line: TextItem[]) {
+export function hashLine(line: Line) {
   let string = ''
   for (const item of line) {
     string += item.str;
   }
-  var hash = 0;
+  let hash = 0;
   if (string.trim().length === 0) return hash;
-  for (var i = 0; i < string.length; i++) {
+  for (let i = 0; i < string.length; i++) {
     const charCode = string.charCodeAt(i);
     if (!isDigit(charCode) && charCode != 32 && charCode != 160) {
       hash = ((hash << 5) - hash) + charCode;
@@ -36,15 +35,13 @@ export function hashLine(line: TextItem[]) {
   return hash;
 }
 
-const hashPage = (text: TextLines): number[] => text.lines.map(hashLine);
+const hashPage = (page: Line[]): number[] => page.map(hashLine);
 
 
-const strip = (page: PageInfo): TextLines => {
+// output only text between margins
+const strip = (page: PageInfo): Line[] => {
   const { text, margin } = page;
-  return {
-    ...text,
-    lines: text.lines.slice(margin.top, text.lines.length - margin.bot),
-  }
+  return text.slice(margin.top, text.length - margin.bot);
 }
 
 const detectMargin = (h1, h2) => {
@@ -63,8 +60,8 @@ const reverse = (arr: any[]) => arr.slice().reverse();
 //
 // Overlapping top/bottom margins will just mean the
 // page is blank.
-const getHash = (text: TextLines) => {
-  const top = hashPage(text);
+const getHash = (page: Line[]) => {
+  const top = hashPage(page);
   const bot = reverse(top);
   return {top, bot};
 }
@@ -85,7 +82,7 @@ const getMargin = (h1: PageInfo["hash"], h2: PageInfo["hash"]) => {
   }
 }
 
-const getInfo = (prev: PageInfo, text: TextLines) => {
+const getInfo = (prev: PageInfo, text: Line[]) => {
   const hash = getHash(text);
   const margin = getMargin(hash, prev?.hash)
   return {
@@ -98,7 +95,7 @@ const getInfo = (prev: PageInfo, text: TextLines) => {
 export class StripMargins extends PageTransform {
   prev: PageInfo;
 
-  _transform(text: TextLines, _encoding, cb) {
+  _transform(page: Line[], _encoding, cb) {
     const {prev} = this;
 
     // Gather page info, comparing hash of previous page's lines,
@@ -109,7 +106,7 @@ export class StripMargins extends PageTransform {
     // the previous page contained the same content.
     //
     // We exclude numbers because page numbers change every page.
-    const cur = getInfo(prev, text);
+    const cur = getInfo(prev, page);
     this.prev = cur;
     if (!prev) { // on first page, nothing to push
       return cb();
@@ -119,7 +116,7 @@ export class StripMargins extends PageTransform {
     // Getting the maximum of the previous and current page's margins
     // means we're getting the maximum of both surrounding pages.
     const {top, bot} = maxMargin(cur.margin, prev?.margin);
-    if (top + bot < prev.text.lines.length) {
+    if (top + bot < prev.text.length) {
       // output page if not blank
       this.push(strip(prev))
     }

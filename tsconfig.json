@@ -4,5 +4,6 @@
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "target": "es2017",
+    "resolveJsonModule": true,
   }
 }

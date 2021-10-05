@@ -3,7 +3,7 @@ import { GlobalState } from "../../GlobalState/GlobalState.js";
 import { DEFAULT_BUF_LEN, TransformObjectMode } from "../ObjectMode.js";
 
 // use default buffer length for lines
-export class LineTransform extends TransformObjectMode {
+export class BlockTransform extends TransformObjectMode {
   globalState: GlobalState;
   constructor(opts: Omit<TransformOptions, 'objectMode'> & {globalState: GlobalState}) {
     super({

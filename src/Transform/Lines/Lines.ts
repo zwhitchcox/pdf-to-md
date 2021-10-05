@@ -1,17 +1,14 @@
-import { TextStyle } from "pdfjs-dist/types/display/api";
-import { TextLine, TextLines } from "../Pages/PageTextLines.js";
+import { debuglog } from "util";
+import { Line } from "../Pages/Preprocessing.js";
 import { LineTransform } from "./Base.js";
 
-export type Line = {
-  styles: {[x: string]: TextStyle};
-  line: TextLine;
-}
+const debug = debuglog('pdf-to-md-debug');
 
 export class Lines extends LineTransform {
-  _transform(text: TextLines, _encoding, cb) {
-    const { lines, styles } = text
-    for (const line of lines) {
-      this.push({styles, line})
+  _transform(page: Line[], _encoding, cb) {
+    for (const line of page) {
+      debug('line', line);
+      this.push(line);
     }
     cb()
   }

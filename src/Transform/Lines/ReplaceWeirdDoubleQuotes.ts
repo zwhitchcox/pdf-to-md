@@ -1,10 +1,19 @@
+import { Line } from "../Pages/Preprocessing.js";
 import { LineTransform } from "./Base.js";
-import { Line } from "./Lines.js";
 
 // convert "``_''" to '"_"'
-export class ReplaceDoubleQuotes extends LineTransform {
-  _transform({line, styles}: Line, _encoding, cb) {
+export class ReplaceWeirdDoubleQuotes extends LineTransform {
+  _transform(line: Line, _encoding, cb) {
     const newLine = [];
+    const joined = line.map(item => item.str).join('');
+    if (/``\w+''/.test(joined)) {
+      for (const item of line) {
+        newLine.push({
+          ...item,
+          str: item.str.replace('``', '"'),
+        })
+      }
+    }
     for (let i = 0; i < line.length; i++) {
       const item = line[i]
       if (item.str.endsWith("``") && line[line.indexOf(item)+2]?.str?.startsWith("''")) {
@@ -25,10 +34,7 @@ export class ReplaceDoubleQuotes extends LineTransform {
       }
     }
 
-    this.push({
-      styles,
-      line: newLine,
-    })
+    this.push(newLine);
     cb()
   }
 }
