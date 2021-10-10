@@ -1,4 +1,4 @@
-import { Line } from "../Pages/Preprocessing.js";
+import { Line } from "../../Preprocessing/Preprocessing.js";
 import { BlockTransform } from "./Base.js";
 
 export class Buffer extends BlockTransform {

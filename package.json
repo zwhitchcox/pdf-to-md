@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node --loader ts-node/esm ./src/run.ts",
     "test": "node  --no-warnings --experimental-json-modules --loader ts-node/esm ./test/cli.ts",
-    "debug": "npm test -- -d"
+    "debug": "NODE_DEBUG=pdf-to-md-debug npm test"
   },
   "keywords": [],
   "author": "",

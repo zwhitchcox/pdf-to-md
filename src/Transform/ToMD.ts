@@ -1,5 +1,5 @@
 import { LineTransform } from "../Lines/Base.js";
-import { Line } from "../Pages/Preprocessing.js";
+import { Line } from "../../Preprocessing/Preprocessing.js";
 
 
 const joinLine = (line: Line) => line.map(item => item.str).join('')

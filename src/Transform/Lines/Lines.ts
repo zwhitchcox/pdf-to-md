@@ -1,5 +1,5 @@
 import { debuglog } from "util";
-import { Line } from "../Pages/Preprocessing.js";
+import { Line } from "../../Preprocessing/Preprocessing.js";
 import { LineTransform } from "./Base.js";
 
 const debug = debuglog('pdf-to-md-debug');

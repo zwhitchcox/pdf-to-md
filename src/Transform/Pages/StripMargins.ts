@@ -1,5 +1,5 @@
-import { PageTransform } from "./Base.js";
-import { Line } from "./Preprocessing.js";
+import { PageTransform } from "../../Preprocessing/Base.js";
+import { Line } from "../../Preprocessing/Preprocessing.js";
 
 export type PageInfo = {
   text: Line[];
