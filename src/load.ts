@@ -23,3 +23,4 @@ export async function loadDocument(file: string) {
 export async function getPageStream(doc: PDFDocumentProxy, options?: {highWaterMark?: number}) {
   return Readable.from(genPage(doc), {objectMode: true})
 }
+

@@ -1,8 +1,11 @@
-import { Line } from "../../Preprocessing/Preprocessing.js";
-import { LineTransform } from "./Base.js";
+import { Transform } from "stream";
+import { Line } from "../../Preprocessing/Preprocessing";
 
 // convert "``_''" to '"_"'
-export class ReplaceWeirdDoubleQuotes extends LineTransform {
+export class ReplaceWeirdDoubleQuotes extends Transform {
+  constructor() {
+    super({objectMode: true});
+  }
   _transform(line: Line, _encoding, cb) {
     const newLine = [];
     const joined = line.map(item => item.str).join('');

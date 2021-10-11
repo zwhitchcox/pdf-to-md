@@ -1,4 +1,4 @@
-import { PageTransform } from "../../Preprocessing/Base.js";
+import { Transform } from "stream";
 import { Line } from "../../Preprocessing/Preprocessing.js";
 
 export type PageInfo = {
@@ -92,7 +92,10 @@ const getInfo = (prev: PageInfo, text: Line[]) => {
   }
 }
 
-export class StripMargins extends PageTransform {
+export class StripMargins extends Transform {
+  constructor() {
+    super({objectMode: true});
+  }
   prev: PageInfo;
 
   _transform(page: Line[], _encoding, cb) {

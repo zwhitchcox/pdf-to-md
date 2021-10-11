@@ -1,8 +1,16 @@
 import { pipeline } from "stream";
-import { Preprocessing, Styles, Heights } from "./Preprocessing.js";
+import { Preprocessing, Styles, Heights, Headings, Height } from "./Preprocessing.js";
 
-export const gatherStylesAndHeights = stream => (
-  new Promise<{styles: Styles, heights: Heights}>((res, rej) => {
+type Stats = {
+  styles: Styles;
+  heights: Heights;
+  headings: Headings;
+  mostUsedLeading: number;
+  avgLineLength: number;
+}
+
+export const gatherStats = stream => (
+  new Promise<Stats>((res, rej) => {
     const pre = new Preprocessing;
     pipeline(stream, pre, err => {
       if (err) {
