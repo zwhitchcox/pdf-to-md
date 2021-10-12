@@ -6,6 +6,9 @@ async function cli() {
 	console.log(pkg.name);
 	process.env.NODE_DEBUG ??= '';
 	process.env.NODE_ENV = pkg.name + '-test';
+	if (process.argv.includes('-m')) {
+		process.env.NODE_DEBUG += pkg.name + '-manual';
+	}
 
 	// we must set up environment first
 	const { run } = await import('./test.js');

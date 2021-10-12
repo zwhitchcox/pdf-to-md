@@ -9,7 +9,6 @@ export class Markdown extends Transform {
     super({objectMode: true});
   }
   _transform(line: Line, _encoding, cb) {
-    console.log(line)
     console.log(joinLine(line));
     cb();
   }

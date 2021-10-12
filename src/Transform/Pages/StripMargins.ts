@@ -1,5 +1,5 @@
 import { Transform } from "stream";
-import { Line } from "../../Preprocessing/Preprocessing.js";
+import { Line } from "./ToPageLines";
 
 export type PageInfo = {
   text: Line[];

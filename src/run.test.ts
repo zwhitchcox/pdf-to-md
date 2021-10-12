@@ -6,8 +6,6 @@ import { run } from './run.js'
 
 test('transform', async () => {
   const file = await getTestFile('single');
-  const doc = await loadDocument(file);
-  const global = await gatherStylesAndHeights(await getPageStream(doc))
   run(await getPageStream(doc), global)
     .on('data', console.log);
 })

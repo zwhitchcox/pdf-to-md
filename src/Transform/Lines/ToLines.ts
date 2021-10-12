@@ -1,5 +1,5 @@
 import { Transform } from "stream";
-import { Line } from "../../Preprocessing/Preprocessing.js";
+import { Line } from "../Pages/ToPageLines";
 
 
 export class ToLines extends Transform {
