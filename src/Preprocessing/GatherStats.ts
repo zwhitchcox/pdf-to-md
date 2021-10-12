@@ -7,59 +7,69 @@ export type Page = Line[]
 export type Dict<T> = {
   [key: string]: T
 }
+export type FreqMap = Dict<number>
 
 export type Styles = Dict<TextStyle>;
 
 const sum = (arr: number[]) => arr.reduce((prev, cur) => (prev + cur), 0);
 const { keys:oKeys, values:oVals } = Object;
-
-const getHeadings = (heights: Dict<number>) => {
-  const keys = oKeys(heights);
-  const vals = oVals(heights);
-  keys.sort((a, b) => heights[a] - heights[b]);
+const getHeadings = (heightFreq: Dict<number>) => {
+  const keys = oKeys(heightFreq);
+  const vals = oVals(heightFreq);
+  keys.sort((a, b) => heightFreq[b] - heightFreq[a]);
   const total = sum(vals);
-  let soFar = 0, i = 0;
+  let soFar = 0, i = -1;
+  let lowestCommon = Infinity;
   // headlines probably compose less than 10% of the book
-  while ((soFar += heights[keys[i++]]) < .9*total);
-  const hKeys = keys.slice(i).reverse();
+  while ((soFar += heightFreq[keys[++i]]) < .9*total) {
+    lowestCommon = Math.min(lowestCommon, Number(keys[i]));
+  }
+  let hKeys = keys.map(Number).slice(i).filter(key => key > lowestCommon);
+  hKeys.sort();
+  hKeys.reverse();
+
   if (hKeys.length > 5) {
-    console.warn('Too many heights to detect headings.');
+    console.warn('Too many heightFreq to detect headings.');
   }
   const headings = {};
-  for (let i = 0, height; i < 6 && i < hKeys.length; height = heights[keys[i++]]) {
-    headings[height] = `h${i}`;
+  // if there is more than one of a particular height, start at h2
+  const offset = heightFreq[hKeys[0]] > 1 ? 1 : 0;
+  for (let i = 0; i < 7 && i < hKeys.length; i++) {
+    headings[hKeys[i]] = i + offset;
   }
   return headings;
 }
 
-const oMode = (dict: Dict<number>) => {
+const freqMapMode = (dict: Dict<number>) => {
   const keys = oKeys(dict);
   keys.sort((a, b) => dict[b] - dict[a]);
-  return keys[0];
+  return Number(keys[0]);
 }
 
-const getAvgLength = (lengths: Dict<number>) => {
+const freqMapAvg = (strLengths: Dict<number>) => {
   let total = 0;
-  for (const key of oKeys(lengths)) {
-    total+=Number(key)*lengths[key];
+  for (const key of oKeys(strLengths)) {
+    total+=Number(key)*strLengths[key];
   }
-  return total / sum(oVals(lengths));
+  return total / sum(oVals(strLengths));
 }
 
-const getMaxLength = (lengths: Dict<number>) => {
-  let keys = oKeys(lengths);
+
+const freqMapMax = (map: FreqMap) => {
+  let keys = oKeys(map);
   if (!keys.length) {
     return undefined;
   }
-  keys.sort((a, b) => lengths[a] - lengths[b]);
-  const lowestFreq = lengths[0]
-  const nextLowest = keys.findIndex(key => lengths[key] !== lowestFreq);
+  keys.sort((a, b) => map[a] - map[b]);
+  const lowestFreq = map[0]
+  const nextLowest = keys.findIndex(key => map[key] !== lowestFreq);
   keys = keys.slice(nextLowest ?? 0);
   // key is the length of the string
   const nums = keys.map(Number);
-  nums.sort();
-  return String(nums[0]);
+  nums.sort((a, b) => b - a);
+  return nums[0];
 }
+
 
 const TRANSFORM_Y_INDEX = 5;
 
@@ -70,12 +80,12 @@ export class GatherStats extends Transform {
     this.styles = styles;
   }
   styles: Styles;
-  heights: Dict<number> = {} // frequency of heights of all characters, useful for detecting headings
-  lengths: Dict<number> = {}
-  leadings: Dict<number> = {}
+  heights: FreqMap = {} // frequency of heights of all characters, useful for detecting headings
+  strLengths: FreqMap = {}
+  leadings: FreqMap = {}
   last: Line[] = [];
   _transform(line: Line, _encoding, cb) {
-    const {heights, lengths, leadings, styles, last} = this;
+    const {heights, strLengths, leadings, styles, last} = this;
     if (!line.length) {
       last.push(line);
       return cb();
@@ -86,7 +96,13 @@ export class GatherStats extends Transform {
       return cb();
     }
     let str = '';
+    let lastItemY;
     for (const item of line) {
+      const itemY = item?.transform[TRANSFORM_Y_INDEX];
+      let hasEOL = item.hasEOL;
+      if (Math.abs(itemY - lastItemY) > item.height) {
+        hasEOL = true;
+      }
       if (!item.height || !item.str?.length) {
         continue;
       }
@@ -109,8 +125,14 @@ export class GatherStats extends Transform {
         leadings[leading]++;
       }
     }
-    lengths[str.length] ??= 0;
-    lengths[str.length]++;
+    strLengths[str.length] ??= 0;
+    strLengths[str.length]++;
+    // if (str.length > 180) {
+    //   for (const item of line) {
+    //     console.log(item)
+    //   }
+    //   console.log(str)
+    // }
     last.push(line);
     if (last.length > 10) {
       last.shift();
@@ -120,26 +142,31 @@ export class GatherStats extends Transform {
     cb()
   }
   _final() {
-    const { heights, lengths, leadings } = this;
+    const { heights, strLengths, leadings } = this;
     const headings = getHeadings(heights);
-    const modeLeading = oMode(leadings);
-    const avgLength = getAvgLength(lengths);
-    const maxLength = getMaxLength(lengths);
-    console.log({
-      heights,
-      lengths,
-      leadings,
-    })
+    const modeLeading = freqMapMode(leadings);
+    const avgStrLength = freqMapAvg(strLengths);
+    const maxStrLength = freqMapMax(strLengths);
+    // console.log({
+      // heights,
+      // strLengths,
+      // leadings,
+    // })
     console.log({
       headings,
       modeLeading,
-      avgLength,
+      avgStrLength,
+      maxStrLength,
     })
     this.push({
       headings: getHeadings(heights),
-      modeLeading: oMode(leadings),
-      avgLength: getAvgLength(lengths),
-      maxLength: getMaxLength(lengths),
+      leadings: {
+        mode: freqMapMode(leadings)
+      },
+      strLength: {
+        avg: freqMapAvg(strLengths),
+        max: freqMapMax(strLengths),
+      }
     })
   }
 }

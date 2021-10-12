@@ -6,7 +6,7 @@ const { keys } = Object
 
 
 test.manual('gather stats', async () => {
-  const file = await getTestFile('long');
+  const file = await getTestFile('full');
   const doc = await loadDocument(file);
   const stream = await getPageStream(doc)
   const stats = await gatherStatsAndStyles(stream);
